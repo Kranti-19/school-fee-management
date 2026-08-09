@@ -29,15 +29,29 @@ const AssignFee = () => {
         ]);
 
         const activeFees = feeRes.data.filter((f) => f.status === 'ACTIVE');
-        setStudents(studRes.data);
-        setFeeStructures(activeFees);
+        setStudents(studRes.data || []);
+        setFeeStructures(activeFees || []);
 
-        if (studRes.data.length > 0) {
-          setFormData((prev) => ({ ...prev, studentId: studRes.data[0]._id }));
-        }
-        if (activeFees.length > 0) {
-          setFormData((prev) => ({ ...prev, feeStructureId: activeFees[0]._id }));
-          setSelectedFee(activeFees[0]);
+        if (studRes.data && studRes.data.length > 0) {
+          const firstStudent = studRes.data[0];
+          const studentClassId = typeof firstStudent.classId === 'object' 
+            ? firstStudent.classId?._id 
+            : firstStudent.classId;
+
+          // Filter fees for the initial student
+          const matchingFees = activeFees.filter((f) => {
+            const fClassId = typeof f.classId === 'object' ? f.classId?._id : f.classId;
+            return fClassId?.toString() === studentClassId?.toString();
+          });
+
+          const initialFee = matchingFees.length > 0 ? matchingFees[0] : null;
+
+          setFormData((prev) => ({
+            ...prev,
+            studentId: firstStudent._id,
+            feeStructureId: initialFee ? initialFee._id : '',
+          }));
+          setSelectedFee(initialFee);
         }
       } catch (err) {
         setError('Failed to fetch required setup data');
@@ -48,14 +62,48 @@ const AssignFee = () => {
     fetchData();
   }, []);
 
+  // Retrieve currently selected student object
+  const selectedStudent = students.find((s) => s._id === formData.studentId);
+  const selectedStudentClassId = typeof selectedStudent?.classId === 'object'
+    ? selectedStudent?.classId?._id
+    : selectedStudent?.classId;
+
+  // Dynamically filter fee structures by student's class
+  const filteredFeeStructures = feeStructures.filter((f) => {
+    if (!selectedStudentClassId) return true;
+    const fClassId = typeof f.classId === 'object' ? f.classId?._id : f.classId;
+    return fClassId?.toString() === selectedStudentClassId?.toString();
+  });
+
+  // Handle Student Selection Change
+  const handleStudentChange = (e) => {
+    const newStudentId = e.target.value;
+    const student = students.find((s) => s._id === newStudentId);
+    const studentClassId = typeof student?.classId === 'object' ? student?.classId?._id : student?.classId;
+
+    const matchingFees = feeStructures.filter((f) => {
+      const fClassId = typeof f.classId === 'object' ? f.classId?._id : f.classId;
+      return fClassId?.toString() === studentClassId?.toString();
+    });
+
+    const newFee = matchingFees.length > 0 ? matchingFees[0] : null;
+
+    setFormData((prev) => ({
+      ...prev,
+      studentId: newStudentId,
+      feeStructureId: newFee ? newFee._id : '',
+    }));
+    setSelectedFee(newFee);
+  };
+
   const handleFeeChange = (e) => {
     const feeId = e.target.value;
     const fee = feeStructures.find((f) => f._id === feeId);
-    setFormData({ ...formData, feeStructureId: feeId });
+    setFormData((prev) => ({ ...prev, feeStructureId: feeId }));
     setSelectedFee(fee);
   };
 
-  const totalAmount = selectedFee ? selectedFee.amount : 0;
+  const totalAmount = selectedFee ? (selectedFee.amount || selectedFee.totalAmount || 0) : 0;
   const discount = Number(formData.discountAmount) || 0;
   const netPayable = Math.max(0, totalAmount - discount);
 
@@ -64,6 +112,10 @@ const AssignFee = () => {
     setError('');
     setSuccess('');
 
+    if (!formData.feeStructureId) {
+      setError('Please select a valid fee structure for this student');
+      return;
+    }
     if (discount < 0) {
       setError('Discount cannot be negative');
       return;
@@ -126,7 +178,7 @@ const AssignFee = () => {
               <select
                 className="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-blue-500 focus:outline-none"
                 value={formData.studentId}
-                onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
+                onChange={handleStudentChange}
                 required
               >
                 {students.map((st) => (
@@ -145,11 +197,15 @@ const AssignFee = () => {
                 onChange={handleFeeChange}
                 required
               >
-                {feeStructures.map((f) => (
-                  <option key={f._id} value={f._id}>
-                    {f.feeHead} - ₹{f.amount} ({f.classId?.className} {f.classId?.section})
-                  </option>
-                ))}
+                {filteredFeeStructures.length === 0 ? (
+                  <option value="">No Fee Structures Available for this Class</option>
+                ) : (
+                  filteredFeeStructures.map((f) => (
+                    <option key={f._id} value={f._id}>
+                      {f.feeHead || f.feeHeadName} - ₹{f.amount || f.totalAmount} ({f.classId?.className} {f.classId?.section})
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -183,7 +239,7 @@ const AssignFee = () => {
 
             <button
               type="submit"
-              disabled={isSubmitting || feeStructures.length === 0}
+              disabled={isSubmitting || filteredFeeStructures.length === 0}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white shadow-md hover:bg-blue-700 transition disabled:opacity-50"
             >
               <UserPlus className="h-5 w-5" />
