@@ -57,17 +57,82 @@ Follow these instructions to run the project locally on your machine.
 ### 1. Clone the Repository
 
 ```bash
-git clone [https://github.com/Kranti-19/school-fee-management.git](https://github.com/Kranti-19/school-fee-management.git)
+git clone https://github.com/Kranti-19/school-fee-management.git
 cd school-fee-management
-2. Backend SetupNavigate to the backend directory:Bashcd backend
-Install dependencies:Bashnpm install
-Create a .env file in the backend/ folder and add the following variables:Code snippetPORT=5000
+```
+
+### 2. Backend Setup
+
+Navigate to the backend directory:
+
+```bash
+cd backend
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create a `.env` file in the `backend/` folder and add the following variables:
+
+```env
+PORT=5000
 MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/school_fee_db?retryWrites=true&w=majority
 JWT_SECRET=your_jwt_secret_key_here
-Seed default data and admin account:Bashnode seedData.js
-Start the backend server:Bashnpm start
-(Backend runs on http://localhost:5000)3. Frontend SetupOpen a new terminal tab and navigate to the frontend directory:Bashcd frontend
-Install dependencies:Bashnpm install
-Create a .env file in the frontend/ folder:Code snippetVITE_API_BASE_URL=http://localhost:5000
-Start the frontend development server:Bashnpm run dev
-(Frontend runs on http://localhost:5173)📑 API Endpoints SummaryMethodEndpointDescriptionPOST/api/auth/loginUser authentication & JWT issuanceGET/api/auth/meFetch logged-in user profileGET / POST/api/classesFetch & create class master dataGET / POST/api/studentsFetch & create student recordsGET / POST/api/fee-structuresManage school fee structuresPOST/api/fee-assignmentsAssign fee plans to studentsPOST/api/paymentsRecord fee collection transactions
+```
+
+Seed default data and admin account:
+
+```bash
+node seedData.js
+```
+
+Start the backend server:
+
+```bash
+npm start
+```
+
+(Backend runs on `http://localhost:5000`)
+
+### 3. Frontend Setup
+
+Open a new terminal tab and navigate to the frontend directory:
+
+```bash
+cd frontend
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create a `.env` file in the `frontend/` folder:
+
+```env
+VITE_API_BASE_URL=http://localhost:5000
+```
+
+Start the frontend development server:
+
+```bash
+npm run dev
+```
+
+(Frontend runs on `http://localhost:5173`)
+
+## 📑 API Endpoints Summary
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| POST | `/api/auth/login` | User authentication & JWT issuance |
+| GET | `/api/auth/me` | Fetch logged-in user profile |
+| GET / POST | `/api/classes` | Fetch & create class master data |
+| GET / POST | `/api/students` | Fetch & create student records |
+| GET / POST | `/api/fee-structures` | Manage school fee structures |
+| POST | `/api/fee-assignments` | Assign fee plans to students |
+| POST | `/api/payments` | Record fee collection transactions |
