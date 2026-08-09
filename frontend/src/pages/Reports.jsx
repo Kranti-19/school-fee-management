@@ -38,6 +38,7 @@ const Reports = () => {
     try {
       setLoading(true);
       let url = '/payments/history?';
+      if (classFilter) url += `classId=${classFilter}&`;
       if (paymentModeFilter) url += `paymentMode=${paymentModeFilter}&`;
       if (startDate && endDate) url += `startDate=${startDate}&endDate=${endDate}&`;
 
@@ -53,7 +54,7 @@ const Reports = () => {
   useEffect(() => {
     fetchReports();
     setCurrentPage(1);
-  }, [paymentModeFilter, startDate, endDate]);
+  }, [classFilter, paymentModeFilter, startDate, endDate]);
 
   const handlePrintReceipt = async (receiptNumber) => {
     try {
@@ -92,7 +93,7 @@ const Reports = () => {
     document.body.removeChild(link);
   };
 
-  // Safe Filtering Logic
+  // Safe Filtering Logic (Handles both Populated Object & Raw ID String)
   const filteredPayments = payments.filter((p) => {
     const query = searchQuery.toLowerCase();
     const studentName = `${p.studentId?.firstName || ''} ${p.studentId?.lastName || ''}`.toLowerCase();
@@ -106,9 +107,13 @@ const Reports = () => {
       receipt.includes(query) ||
       transactionRef.includes(query);
 
-    const matchesClass = classFilter
-      ? p.studentId?.classId?._id === classFilter || p.studentId?.classId === classFilter
-      : true;
+    // Get Class ID safely
+    const actualClassId =
+      typeof p.studentId?.classId === 'object'
+        ? p.studentId?.classId?._id?.toString()
+        : p.studentId?.classId?.toString();
+
+    const matchesClass = classFilter ? actualClassId === classFilter : true;
 
     const matchesFeeHead = feeHeadFilter
       ? (p.installmentId?.installmentName || '').toLowerCase().includes(feeHeadFilter.toLowerCase())

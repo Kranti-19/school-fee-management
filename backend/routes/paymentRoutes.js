@@ -18,9 +18,8 @@ const updateAssignmentStatus = async (assignmentId) => {
   await StudentFeeAssignment.findByIdAndUpdate(assignmentId, { status: newStatus });
 };
 
-// ==========================================
+
 // 1. COLLECT PAYMENT (Sections 9 & 10)
-// ==========================================
 router.post('/collect', auth, async (req, res) => {
   try {
     const { installmentId, amountPaid, paymentMode, transactionRef, remarks } = req.body;
@@ -92,9 +91,8 @@ router.post('/collect', auth, async (req, res) => {
   }
 });
 
-// ==========================================
+
 // 2. GET RECEIPT DETAILS (Section 11)
-// ==========================================
 router.get('/receipt/:receiptNumber', auth, async (req, res) => {
   try {
     const payment = await Payment.findOne({ receiptNumber: req.params.receiptNumber })
@@ -121,25 +119,37 @@ router.get('/receipt/:receiptNumber', auth, async (req, res) => {
   }
 });
 
-// ==========================================
+
 // 3. PAYMENT HISTORY / REPORTS (Sections 13 & 14)
-// ==========================================
 router.get('/history', auth, async (req, res) => {
   try {
-    const { studentId, paymentMode, startDate, endDate } = req.query;
+    const { studentId, classId, paymentMode, startDate, endDate } = req.query;
     let query = {};
 
     if (studentId) query.studentId = studentId;
-    if (paymentMode) query.paymentMode = paymentMode;
+    if (paymentMode && paymentMode !== 'ALL') query.paymentMode = paymentMode;
+
     if (startDate && endDate) {
       query.paymentDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
 
-    const payments = await Payment.find(query)
-      .populate('studentId', 'firstName lastName grNumber')
+    let payments = await Payment.find(query)
+      .populate({
+        path: 'studentId',
+        select: 'firstName lastName grNumber classId',
+        populate: { path: 'classId', select: 'className section' }
+      })
       .populate('installmentId', 'installmentName')
       .populate('collectedBy', 'username')
       .sort({ createdAt: -1 });
+
+    // Filter payments by Class ID if selected
+    if (classId && classId !== 'ALL' && classId !== '') {
+      payments = payments.filter((payment) => {
+        if (!payment.studentId || !payment.studentId.classId) return false;
+        return payment.studentId.classId._id.toString() === classId.toString();
+      });
+    }
 
     res.json(payments);
   } catch (err) {
