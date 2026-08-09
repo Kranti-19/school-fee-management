@@ -112,36 +112,6 @@ const Dashboard = () => {
       </div>
 
       {/* Collection Overview Visual Breakdown */}
-<div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100 space-y-4">
-  <h2 className="text-lg font-bold text-gray-800">Fee Collection Overview</h2>
-  <div className="space-y-3">
-    <div>
-      <div className="flex justify-between text-xs font-semibold text-gray-600 mb-1">
-        <span>Collected Fees</span>
-        <span>₹{stats.totalCollected?.toLocaleString() || 0}</span>
-      </div>
-      <div className="h-3 w-full rounded-full bg-gray-100 overflow-hidden">
-        <div 
-          className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
-          style={{ width: `${Math.min(100, (stats.totalCollected / (stats.totalAssigned || 1)) * 100)}%` }}
-        ></div>
-      </div>
-    </div>
-
-    <div>
-      <div className="flex justify-between text-xs font-semibold text-gray-600 mb-1">
-        <span>Pending Fees</span>
-        <span>₹{stats.totalPending?.toLocaleString() || 0}</span>
-      </div>
-      <div className="h-3 w-full rounded-full bg-gray-100 overflow-hidden">
-        <div 
-          className="h-full bg-rose-500 rounded-full transition-all duration-500" 
-          style={{ width: `${Math.min(100, (stats.totalPending / (stats.totalAssigned || 1)) * 100)}%` }}
-        ></div>
-      </div>
-    </div>
-  </div>
-</div>
       <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100 space-y-4">
         <h2 className="text-lg font-bold text-gray-800">Fee Collection Overview</h2>
         <div className="space-y-4">
